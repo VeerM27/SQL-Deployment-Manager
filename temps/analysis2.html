@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Analysis - SQL Deployment Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        /* ------------------ COLOR VARIABLES ------------------ */
+        :root {
+            --royal: #0b3d91;     /* Deep blue for header and accents */
+            --navy: #0a315e;      /* Dark navy for sidebar background */
+            --muted: #6c757d;     /* Gray text */
+            --card-bg: #ffffff;   /* Default white background for cards */
+            --page-bg: #f5f7fb;   /* Light gray-blue background for page */
+        }
+
+        /* ------------------ GLOBAL PAGE STYLES ------------------ */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--page-bg);
+            color: #0b1a2b;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Main wrapper: sidebar + main content area */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ------------------ SIDEBAR STYLES ------------------ */
+        .sidebar {
+            background-color: var(--navy);
+            color: #fff;
+            width: 240px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        /* Sidebar links */
+        .sidebar a {
+            color: #dbe1f2;
+            text-decoration: none;
+            display: block;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: background .2s;
+        }
+
+        /* Active or hovered link */
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #143d74;
+            color: #fff;
+        }
+
+        /* ------------------ MAIN CONTENT AREA ------------------ */
+        .main {
+            flex: 1;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header bar at the top */
+        .app-header {
+            background: var(--royal);
+            color: #fff;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .app-header span {
+            font-size: .95rem;
+            color: #dbe1f2;
+        }
+
+        /* ------------------ CONTENT BOX STYLES ------------------ */
+        .content-box {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        /* ------------------ BUTTON STYLING ------------------ */
+        .action-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #000;
+            transition: transform .2s ease, box-shadow .2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        /* Hover effect for buttons */
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, .15);
+        }
+
+        /* Button color themes */
+        .btn-stage { background-color: #fff3cd; } /* Light Yellow */
+
+        /* ------------------ ANALYSIS SPECIFIC STYLES ------------------ */
+        .feedback-item {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        pre {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 400px;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+
+        /* ------------------ NEXT BUTTON ------------------ */
+        .btn-next {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--royal);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-next:hover {
+            background: #072c73;
+        }
+
+        /* ------------------ RESPONSIVE ------------------ */
+        @media(max-width: 768px) {
+            .app { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; justify-content: space-around; }
+        }
+    </style>
+</head>
+
+<body>
+<!-- MAIN APP CONTAINER -->
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>SQL Deployment Manager</h2>
+        <a href="/home">🏠 Home</a>
+        <a href="/development">🧑‍💻 Development</a>
+        <a href="/comparison">📊 Schema Comparison</a>
+        <a href="/analysis" class="active">🔍 SQL Analysis</a>
+        <a href="/workflow">⚙️ Workflow</a>
+        <a href="/history">🕓 History</a>
+    </div>
+
+    <!-- MAIN SECTION -->
+    <div class="main">
+
+        <!-- Header -->
+        <div class="app-header">
+            <div>SQL Deployment Manager</div>
+            <span>DBA_Admin</span>
+        </div>
+
+        <!-- Content Box for SQL Query -->
+        <div class="content-box">
+            <h4>SQL Analysis</h4>
+            <p class="text-muted">Automated inspection and performance feedback for your SQL queries.</p>
+
+            <h6>SQL Query</h6>
+            <div th:if="${sqlText != null and #strings.isNotEmpty(sqlText)}">
+                <pre th:text="${sqlText}"></pre>
+            </div>
+            <div th:if="${sqlText == null or #strings.isEmpty(sqlText)}">
+                <div class="alert alert-warning mb-0">
+                    ⚠️ No SQL query found. Please upload or paste an SQL query in the Development page.
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Box for Analysis Results -->
+        <div class="content-box">
+            <h6>Analysis Results</h6>
+            <div th:if="${feedback != null}">
+                <div th:each="item : ${feedback}" class="feedback-item" th:text="${item}"></div>
+            </div>
+            <div th:if="${feedback == null}">
+                <p class="text-muted">No analysis available yet. Run an analysis from the Development page.</p>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <a href="/development" class="action-btn btn-stage">
+            <i class="bi bi-arrow-left-circle"></i>
+            <span>Back to Development</span>
+        </a>
+    </div>
+</div>
+
+<!-- Bootstrap JS for interactivity -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

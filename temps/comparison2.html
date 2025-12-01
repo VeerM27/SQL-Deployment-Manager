@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Schema Comparison - SQL Deployment Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body style="background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif;">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 bg-dark text-white vh-100 p-4">
+            <h4 class="text-center mb-4">SQL Manager</h4>
+            <a href="/home" class="d-block text-decoration-none text-light mb-2">🏠 Home</a>
+            <a href="/development" class="d-block text-decoration-none text-light mb-2">🧑‍💻 Development</a>
+            <a href="/comparison" class="fw-bold d-block text-decoration-none text-white mb-2">📊 Schema Comparison</a>
+            <a href="/analysis" class="d-block text-decoration-none text-light mb-2">🔍 SQL Analysis</a>
+            <a href="/workflow" class="d-block text-decoration-none text-light mb-2">⚙️ Workflow</a>
+            <a href="/history" class="d-block text-decoration-none text-light mb-2">🕓 History</a>
+        </div>
+
+        <div class="col-md-10 p-5">
+            <h2>Schema Comparison</h2>
+            <p class="text-muted">Analyzes your SQL script against the live database to identify potential changes.</p>
+
+            <div th:if="${warning}" class="alert alert-warning" th:text="${warning}"></div>
+
+            <div th:if="${results}" class="mt-4">
+                <h5>Results:</h5>
+                <ul class="list-group">
+                    <li class="list-group-item" th:each="result : ${results}" th:text="${result}"></li>
+                </ul>
+            </div>
+
+            <div class="mt-4">
+                <a href="/development" class="btn btn-secondary">← Back to Development</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

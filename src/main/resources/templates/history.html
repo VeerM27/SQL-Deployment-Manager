@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment History - SQL Deployment Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        /* ------------------ COLOR VARIABLES ------------------ */
+        :root {
+            --royal: #0b3d91;     /* Deep blue for header and accents */
+            --navy: #0a315e;      /* Dark navy for sidebar background */
+            --muted: #6c757d;     /* Gray text */
+            --card-bg: #ffffff;   /* Default white background for cards */
+            --page-bg: #f5f7fb;   /* Light gray-blue background for page */
+        }
+
+        /* ------------------ GLOBAL PAGE STYLES ------------------ */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--page-bg);
+            color: #0b1a2b;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Main wrapper: sidebar + main content area */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ------------------ SIDEBAR STYLES ------------------ */
+        .sidebar {
+            background-color: var(--navy);
+            color: #fff;
+            width: 240px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        /* Sidebar links */
+        .sidebar a {
+            color: #dbe1f2;
+            text-decoration: none;
+            display: block;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: background .2s;
+        }
+
+        /* Active or hovered link */
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #143d74;
+            color: #fff;
+        }
+
+        /* ------------------ MAIN CONTENT AREA ------------------ */
+        .main {
+            flex: 1;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header bar at the top */
+        .app-header {
+            background: var(--royal);
+            color: #fff;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .app-header span {
+            font-size: .95rem;
+            color: #dbe1f2;
+        }
+
+        /* ------------------ CONTENT BOX STYLES ------------------ */
+        .content-box {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        /* ------------------ BUTTON STYLING ------------------ */
+        .action-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #000;
+            transition: transform .2s ease, box-shadow .2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        /* Hover effect for buttons */
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, .15);
+        }
+
+        /* Button color themes */
+        .btn-stage { background-color: #fff3cd; } /* Light Yellow */
+        .btn-prod { background-color: #f8d7da; }  /* Light Red */
+
+        /* ------------------ HISTORY SPECIFIC STYLES ------------------ */
+        .log-entry {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* ------------------ NEXT BUTTON ------------------ */
+        .btn-next {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--royal);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-next:hover {
+            background: #072c73;
+        }
+
+        /* ------------------ RESPONSIVE ------------------ */
+        @media(max-width: 768px) {
+            .app { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; justify-content: space-around; }
+        }
+    </style>
+</head>
+
+<body>
+<!-- MAIN APP CONTAINER -->
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>SQL Deployment Manager</h2>
+        <a href="/home">🏠 Home</a>
+        <a href="/development">🧑‍💻 Development</a>
+        <a href="/comparison">📊 Schema Comparison</a>
+        <a href="/analysis">🔍 SQL Analysis</a>
+        <a href="/workflow">⚙️ Workflow</a>
+        <a href="/history" class="active">🕓 History</a>
+    </div>
+
+    <!-- MAIN SECTION -->
+    <div class="main">
+
+        <!-- Header -->
+        <div class="app-header">
+            <div>SQL Deployment Manager</div>
+            <span>DBA_Admin</span>
+        </div>
+
+        <!-- Content Box -->
+        <div class="content-box">
+            <h4>Deployment History</h4>
+            <p class="text-muted">Review all logged SQL actions and system operations performed so far.</p>
+
+            <!-- Message after clear -->
+            <div th:if="${message}" class="alert alert-info mt-3" th:text="${message}"></div>
+
+            <!-- Empty State -->
+            <div th:if="${history.isEmpty()}">
+                <div class="alert alert-warning mt-4">
+                    ⚠️ No deployment history found yet. Perform actions in the Development or Workflow pages to generate history entries.
+                </div>
+            </div>
+
+            <!-- History Records -->
+            <div th:each="entry : ${history}" class="log-entry">
+                <h6 th:text="${entry.action}"></h6>
+                <p class="mb-1"><strong>Source:</strong> <span th:text="${entry.source}"></span></p>
+                <p class="mb-1"><strong>Status:</strong> <span th:text="${entry.status}"></span></p>
+                <p class="mb-1"><strong>Details:</strong> <span th:text="${entry.details}"></span></p>
+                <p class="text-muted small" th:text="${entry.timestamp}"></p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-3 mt-4">
+                <a href="/development" class="action-btn btn-stage">
+                    <i class="bi bi-arrow-left-circle"></i>
+                    <span>Back to Development</span>
+                </a>
+
+                <form th:action="@{/history/clear}" method="post">
+                    <button type="submit" class="action-btn btn-prod">
+                        <i class="bi bi-trash"></i>
+                        <span>Clear History</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS for interactivity -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
