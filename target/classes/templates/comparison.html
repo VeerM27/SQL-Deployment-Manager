@@ -11,7 +11,6 @@
         :root {
             --royal: #0b3d91;
             --navy: #0a315e;
-            --muted: #6c757d;
             --card-bg: #ffffff;
             --page-bg: #f5f7fb;
         }
@@ -22,7 +21,6 @@
             font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
             background: var(--page-bg);
             color: #0b1a2b;
-            -webkit-font-smoothing: antialiased;
         }
 
         .app {
@@ -134,7 +132,7 @@
         <a href="/history">🕓 History</a>
     </div>
 
-    <!-- MAIN -->
+    <!-- MAIN SECTION -->
     <div class="main">
 
         <div class="app-header">
@@ -143,51 +141,51 @@
         </div>
 
         <div class="content-box">
-            <h4>Schema Comparison</h4>
-            <p class="text-muted">Analyzes your SQL script against the live database to identify potential changes.</p>
+            <h4>Schema Comparison & Deployment Impact</h4>
+            <p class="text-muted">
+                Analyze your SQL against the live <strong>college</strong> schema and review the impact of the last deployment.
+            </p>
 
-            <!-- Warning -->
+            <!-- Warnings / messages -->
             <div th:if="${warning}" class="alert alert-warning" th:text="${warning}"></div>
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
-            <!-- ========================== -->
-            <!-- SELECT QUERY PREVIEW BLOCK -->
-            <!-- ========================== -->
+            <!-- ======================= -->
+            <!-- SELECT QUERY PREVIEW    -->
+            <!-- ======================= -->
             <div th:if="${isSelect}" class="mt-4">
                 <h6>Query Result Preview:</h6>
 
-                <!-- TABLE WITH RESULTS -->
                 <div th:if="${selectResults != null and !selectResults.isEmpty()}">
                     <table class="table table-bordered table-striped mt-3">
                         <thead>
-                            <tr>
-                                <th th:each="col : ${#lists.toList(selectResults[0].keySet())}"
-                                    th:text="${col}">
-                                </th>
-                            </tr>
+                        <tr>
+                            <th th:each="col : ${#lists.toList(selectResults[0].keySet())}"
+                                th:text="${col}">
+                            </th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="row : ${selectResults}">
-                                <td th:each="value : ${#lists.toList(row.values())}"
-                                    th:text="${value}">
-                                </td>
-                            </tr>
+                        <tr th:each="row : ${selectResults}">
+                            <td th:each="value : ${#lists.toList(row.values())}"
+                                th:text="${value}">
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- No rows returned -->
                 <div th:if="${selectResults != null and selectResults.isEmpty()}"
                      class="alert alert-info mt-3">
                     Query executed successfully. No rows returned.
                 </div>
             </div>
-            <!-- ========================== -->
-            <!-- END SELECT QUERY PREVIEW  -->
-            <!-- ========================== -->
 
-            <!-- ORIGINAL COMPARISON RESULT -->
+            <!-- ======================= -->
+            <!-- SCHEMA COMPARISON (NON-SELECT) -->
+            <!-- ======================= -->
             <div th:if="${results}" class="mt-4">
-                <h6>Results:</h6>
+                <h6>Schema Comparison Results:</h6>
                 <ul class="list-group">
                     <li class="list-group-item"
                         th:each="result : ${results}"
@@ -196,7 +194,25 @@
                 </ul>
             </div>
 
-            <!-- BACK BUTTON -->
+            <!-- ======================= -->
+            <!-- DEPLOYMENT IMPACT       -->
+            <!-- ======================= -->
+            <div th:if="${schemaImpact}" class="mt-4">
+                <h6>Last Deployment – Schema Impact:</h6>
+                <ul class="list-group">
+                    <li class="list-group-item"
+                        th:each="line : ${schemaImpact}"
+                        th:text="${line}">
+                    </li>
+                </ul>
+            </div>
+
+            <div th:if="${rowImpactSummary}" class="alert alert-secondary mt-3">
+                <strong>Row Impact:</strong>
+                <span th:text="${rowImpactSummary}"></span>
+            </div>
+
+            <!-- Back Button -->
             <a href="/development" class="action-btn btn-stage mt-4">
                 <i class="bi bi-arrow-left-circle"></i>
                 <span>Back to Development</span>
