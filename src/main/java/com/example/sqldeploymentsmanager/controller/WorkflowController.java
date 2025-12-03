@@ -6,118 +6,66 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/workflow")
 public class WorkflowController {
 
     private final WorkflowService workflowService;
-    private final HistoryService historyService;
 
     public WorkflowController(WorkflowService workflowService, HistoryService historyService) {
         this.workflowService = workflowService;
-        this.historyService = historyService;
     }
 
     @GetMapping
     public String showWorkflowPage(HttpSession session, Model model) {
-        String lastSQL = (String) session.getAttribute("lastSQL");
-        System.out.println("GET /workflow - lastSQL: " + (lastSQL != null ? "exists" : "null"));
-        
-        if (lastSQL == null || lastSQL.isBlank()) {
+        String sql = (String) session.getAttribute("lastSQL");
+
+        if (sql == null || sql.isBlank()) {
             model.addAttribute("hasSQL", false);
-        } else {
-            workflowService.setLastSQL(lastSQL);
-            model.addAttribute("hasSQL", true);
-            model.addAttribute("currentStatus", workflowService.getCurrentStatus());
-            model.addAttribute("workflowHistory", workflowService.getWorkflowHistory());
-            model.addAttribute("sqlScript", workflowService.getLastSQL());
+            return "workflow";
         }
+
+        if (workflowService.getLastSQL() == null ||
+            !workflowService.getLastSQL().equals(sql)) {
+            workflowService.setLastSQL(sql);
+        }
+
+        model.addAttribute("hasSQL", true);
+        model.addAttribute("currentStatus", workflowService.getCurrentStatus());
+        model.addAttribute("workflowHistory", workflowService.getWorkflowHistory());
         return "workflow";
     }
 
     @PostMapping("/validate")
-    public String validate(HttpSession session, Model model) {
-        System.out.println("POST /workflow/validate");
-        
-        String lastSQL = (String) session.getAttribute("lastSQL");
-        if (lastSQL != null) {
-            workflowService.setLastSQL(lastSQL);
-        }
-        
-        String msg = workflowService.validateSQL();
-        System.out.println("Validation result: " + msg);
-        
-        model.addAttribute("message", msg);
-        // REMOVED DUPLICATE: historyService.logAction("Validate", "Workflow", workflowService.getCurrentStatus().toString(), msg);
-        
-        addWorkflowAttributes(model);
-        return "workflow";
+    public String validate(RedirectAttributes redirect) {
+        redirect.addFlashAttribute("message", workflowService.validateSQL());
+        return "redirect:/workflow";
     }
 
     @PostMapping("/backup")
-    public String backup(HttpSession session, Model model) {
-        System.out.println("POST /workflow/backup");
-        
-        String msg = workflowService.backupDatabase();
-        System.out.println("Backup result: " + msg);
-        
-        model.addAttribute("message", msg);
-        // REMOVED DUPLICATE: historyService.logAction("Backup", "Workflow", workflowService.getCurrentStatus().toString(), msg);
-        
-        addWorkflowAttributes(model);
-        return "workflow";
+    public String backup(RedirectAttributes redirect) {
+        redirect.addFlashAttribute("message", workflowService.backupDatabase());
+        return "redirect:/workflow";
     }
 
     @PostMapping("/approve")
-    public String approve(HttpSession session, Model model) {
-        System.out.println("POST /workflow/approve");
-        
-        String msg = workflowService.approveDeployment();
-        System.out.println("Approve result: " + msg);
-        
-        model.addAttribute("message", msg);
-        // REMOVED DUPLICATE: historyService.logAction("Approval", "Workflow", workflowService.getCurrentStatus().toString(), msg);
-        
-        addWorkflowAttributes(model);
-        return "workflow";
+    public String approve(RedirectAttributes redirect) {
+        redirect.addFlashAttribute("message", workflowService.approveDeployment());
+        return "redirect:/workflow";
     }
 
     @PostMapping("/deploy")
-    public String deploy(HttpSession session, Model model) {
-        System.out.println("POST /workflow/deploy");
-        
-        String msg = workflowService.deployToDatabase();
-        System.out.println("Deploy result: " + msg);
-        
-        model.addAttribute("message", msg);
-        // REMOVED DUPLICATE: historyService.logAction("Deploy", "Workflow", workflowService.getCurrentStatus().toString(), msg);
-        
-        addWorkflowAttributes(model);
-        return "workflow";
+    public String deploy(RedirectAttributes redirect) {
+        redirect.addFlashAttribute("message", workflowService.deployToDatabase());
+        return "redirect:/workflow";
     }
 
     @PostMapping("/reset")
-    public String resetWorkflow(HttpSession session, Model model) {
-        System.out.println("POST /workflow/reset");
-        
-        String lastSQL = (String) session.getAttribute("lastSQL");
-        if (lastSQL != null) {
-            workflowService.setLastSQL(lastSQL);
-        }
-        
-        // Keep this one - reset is only logged here, not in WorkflowService
-        historyService.logAction("Reset", "Workflow", workflowService.getCurrentStatus().toString(), "Workflow has been reset");
-        
-        model.addAttribute("message", "Workflow has been reset");
-        addWorkflowAttributes(model);
-        return "workflow";
-    }
-
-    private void addWorkflowAttributes(Model model) {
-        model.addAttribute("hasSQL", true);
-        model.addAttribute("currentStatus", workflowService.getCurrentStatus());
-        model.addAttribute("workflowHistory", workflowService.getWorkflowHistory());
-        model.addAttribute("sqlScript", workflowService.getLastSQL());
+    public String reset(RedirectAttributes redirect) {
+        workflowService.reset();
+        redirect.addFlashAttribute("message", "Workflow reset.");
+        return "redirect:/workflow";
     }
 }

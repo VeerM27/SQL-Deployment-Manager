@@ -8,16 +8,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        /* ------------------ COLOR VARIABLES ------------------ */
         :root {
-            --royal: #0b3d91;     /* Deep blue for header and accents */
-            --navy: #0a315e;      /* Dark navy for sidebar background */
-            --muted: #6c757d;     /* Gray text */
-            --card-bg: #ffffff;   /* Default white background for cards */
-            --page-bg: #f5f7fb;   /* Light gray-blue background for page */
+            --royal: #0b3d91;
+            --navy: #0a315e;
+            --muted: #6c757d;
+            --card-bg: #ffffff;
+            --page-bg: #f5f7fb;
         }
 
-        /* ------------------ GLOBAL PAGE STYLES ------------------ */
         html, body {
             height: 100%;
             margin: 0;
@@ -27,13 +25,11 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Main wrapper: sidebar + main content area */
         .app {
             display: flex;
             min-height: 100vh;
         }
 
-        /* ------------------ SIDEBAR STYLES ------------------ */
         .sidebar {
             background-color: var(--navy);
             color: #fff;
@@ -49,7 +45,6 @@
             margin-bottom: 30px;
         }
 
-        /* Sidebar links */
         .sidebar a {
             color: #dbe1f2;
             text-decoration: none;
@@ -60,14 +55,12 @@
             transition: background .2s;
         }
 
-        /* Active or hovered link */
         .sidebar a:hover,
         .sidebar a.active {
             background: #143d74;
             color: #fff;
         }
 
-        /* ------------------ MAIN CONTENT AREA ------------------ */
         .main {
             flex: 1;
             padding: 30px 40px;
@@ -75,7 +68,6 @@
             flex-direction: column;
         }
 
-        /* Header bar at the top */
         .app-header {
             background: var(--royal);
             color: #fff;
@@ -83,9 +75,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: 500;
             border-radius: 10px;
             margin-bottom: 25px;
+            font-weight: 500;
         }
 
         .app-header span {
@@ -93,7 +85,6 @@
             color: #dbe1f2;
         }
 
-        /* ------------------ CONTENT BOX STYLES ------------------ */
         .content-box {
             background: var(--card-bg);
             border-radius: 12px;
@@ -102,7 +93,6 @@
             margin-bottom: 20px;
         }
 
-        /* ------------------ BUTTON STYLING ------------------ */
         .action-btn {
             border: none;
             border-radius: 10px;
@@ -110,43 +100,19 @@
             font-weight: 600;
             color: #000;
             transition: transform .2s ease, box-shadow .2s ease;
-            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             text-decoration: none;
         }
 
-        /* Hover effect for buttons */
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 3px 6px rgba(0, 0, 0, .15);
         }
 
-        /* Button color themes */
-        .btn-stage { background-color: #fff3cd; } /* Light Yellow */
+        .btn-stage { background-color: #fff3cd; }
 
-        /* ------------------ NEXT BUTTON ------------------ */
-        .btn-next {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--royal);
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .btn-next:hover {
-            background: #072c73;
-        }
-
-        /* ------------------ RESPONSIVE ------------------ */
         @media(max-width: 768px) {
             .app { flex-direction: column; }
             .sidebar { width: 100%; flex-direction: row; justify-content: space-around; }
@@ -155,7 +121,6 @@
 </head>
 
 <body>
-<!-- MAIN APP CONTAINER -->
 <div class="app">
 
     <!-- SIDEBAR -->
@@ -169,30 +134,69 @@
         <a href="/history">🕓 History</a>
     </div>
 
-    <!-- MAIN SECTION -->
+    <!-- MAIN -->
     <div class="main">
 
-        <!-- Header -->
         <div class="app-header">
             <div>SQL Deployment Manager</div>
             <span>DBA_Admin</span>
         </div>
 
-        <!-- Content Box -->
         <div class="content-box">
             <h4>Schema Comparison</h4>
             <p class="text-muted">Analyzes your SQL script against the live database to identify potential changes.</p>
 
+            <!-- Warning -->
             <div th:if="${warning}" class="alert alert-warning" th:text="${warning}"></div>
 
+            <!-- ========================== -->
+            <!-- SELECT QUERY PREVIEW BLOCK -->
+            <!-- ========================== -->
+            <div th:if="${isSelect}" class="mt-4">
+                <h6>Query Result Preview:</h6>
+
+                <!-- TABLE WITH RESULTS -->
+                <div th:if="${selectResults != null and !selectResults.isEmpty()}">
+                    <table class="table table-bordered table-striped mt-3">
+                        <thead>
+                            <tr>
+                                <th th:each="col : ${#lists.toList(selectResults[0].keySet())}"
+                                    th:text="${col}">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row : ${selectResults}">
+                                <td th:each="value : ${#lists.toList(row.values())}"
+                                    th:text="${value}">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- No rows returned -->
+                <div th:if="${selectResults != null and selectResults.isEmpty()}"
+                     class="alert alert-info mt-3">
+                    Query executed successfully. No rows returned.
+                </div>
+            </div>
+            <!-- ========================== -->
+            <!-- END SELECT QUERY PREVIEW  -->
+            <!-- ========================== -->
+
+            <!-- ORIGINAL COMPARISON RESULT -->
             <div th:if="${results}" class="mt-4">
                 <h6>Results:</h6>
                 <ul class="list-group">
-                    <li class="list-group-item" th:each="result : ${results}" th:text="${result}"></li>
+                    <li class="list-group-item"
+                        th:each="result : ${results}"
+                        th:text="${result}">
+                    </li>
                 </ul>
             </div>
 
-            <!-- Back Button -->
+            <!-- BACK BUTTON -->
             <a href="/development" class="action-btn btn-stage mt-4">
                 <i class="bi bi-arrow-left-circle"></i>
                 <span>Back to Development</span>
@@ -201,7 +205,6 @@
     </div>
 </div>
 
-<!-- Bootstrap JS for interactivity -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

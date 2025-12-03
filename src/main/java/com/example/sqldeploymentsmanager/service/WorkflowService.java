@@ -14,16 +14,21 @@ public class WorkflowService {
 
     private String lastSQL;
     private WorkflowStatus currentStatus = WorkflowStatus.DRAFT;
-    private List<String> workflowHistory = new ArrayList<>();
+    private final List<String> workflowHistory = new ArrayList<>();
+
     private final HistoryService historyService;
+    private final DatabaseExecutorService executor;
+    private final DatabaseBackupService backupService;
 
-    // Add constructor with HistoryService
-    public WorkflowService(HistoryService historyService) {
+    public WorkflowService(
+            HistoryService historyService,
+            DatabaseExecutorService executor,
+            DatabaseBackupService backupService
+    ) {
         this.historyService = historyService;
+        this.executor = executor;
+        this.backupService = backupService;
     }
-
-    // ALL YOUR EXISTING CODE STAYS EXACTLY THE SAME...
-    // DON'T CHANGE ANY OF YOUR EXISTING METHODS
 
     public enum WorkflowStatus {
         DRAFT, VALIDATED, BACKUP_CREATED, APPROVAL_PENDING, APPROVED, COMPLETED
@@ -33,103 +38,102 @@ public class WorkflowService {
         this.lastSQL = sql;
         this.currentStatus = WorkflowStatus.DRAFT;
         this.workflowHistory.clear();
-        addToHistory("Workflow initialized with SQL script");
-        // ADD THIS ONE LINE:
-        historyService.logAction("Workflow Initialized", "Workflow", currentStatus.toString(), "Workflow started");
+        add("Workflow initialized");
+        historyService.logAction("Init Workflow", "Workflow", "DRAFT", "SQL updated");
     }
 
     public String validateSQL() {
-        System.out.println("WorkflowService.validateSQL() called");
-        
         if (lastSQL == null || lastSQL.isBlank()) {
-            currentStatus = WorkflowStatus.DRAFT;
-            addToHistory("Validation failed: No SQL found");
-            // ADD THIS ONE LINE:
-            historyService.logAction("Validate SQL", "Workflow", "FAILED", "No SQL found to validate");
-            return "⚠️ No SQL found to validate.";
+            add("Validation failed: No SQL");
+            historyService.logAction("Validate", "Workflow", "FAILED", "No SQL");
+            return "⚠️ No SQL to validate.";
         }
-        
-        currentStatus = WorkflowStatus.VALIDATED;
-        String result = "✅ SQL validation passed successfully!";
-        addToHistory(result);
-        // ADD THIS ONE LINE:
-        historyService.logAction("Validate SQL", "Workflow", "SUCCESS", "SQL validation passed");
-        return result;
+
+        try {
+            executor.validateSyntax(lastSQL);
+            currentStatus = WorkflowStatus.VALIDATED;
+            add("Validation successful");
+            historyService.logAction("Validate", "Workflow", "SUCCESS", "SQL OK");
+            return "SQL validated successfully.";
+        } catch (Exception ex) {
+            currentStatus = WorkflowStatus.DRAFT;
+            add("Validation failed: " + ex.getMessage());
+            historyService.logAction("Validate", "Workflow", "FAILED", ex.getMessage());
+            return "❌ SQL validation failed: " + ex.getMessage();
+        }
     }
 
     public String backupDatabase() {
-        System.out.println("WorkflowService.backupDatabase() called");
-        
         if (currentStatus != WorkflowStatus.VALIDATED) {
-            addToHistory("Backup failed: Please validate SQL first");
-            // ADD THIS ONE LINE:
-            historyService.logAction("Backup Database", "Workflow", "FAILED", "Cannot backup - SQL not validated");
-            return "⚠️ Please validate SQL first before backup.";
+            add("Backup failed: Not validated");
+            historyService.logAction("Backup", "Workflow", "FAILED", "Not validated");
+            return "⚠️ Must validate SQL before backup.";
         }
-        
-        currentStatus = WorkflowStatus.BACKUP_CREATED;
-        String result = "✅ Backup simulation completed successfully.";
-        addToHistory(result);
-        // ADD THIS ONE LINE:
-        historyService.logAction("Backup Database", "Workflow", "SUCCESS", "Backup simulation completed");
-        return result;
+
+        try {
+            backupService.backupCurrentSchema();
+            currentStatus = WorkflowStatus.BACKUP_CREATED;
+            add("Backup completed");
+            historyService.logAction("Backup", "Workflow", "SUCCESS", "Schema backed up");
+            return "Backup completed successfully.";
+        } catch (Exception ex) {
+            add("Backup failed: " + ex.getMessage());
+            historyService.logAction("Backup", "Workflow", "FAILED", ex.getMessage());
+            return "❌ Backup failed: " + ex.getMessage();
+        }
     }
 
     public String approveDeployment() {
-        System.out.println("WorkflowService.approveDeployment() called");
-        
         if (currentStatus == WorkflowStatus.BACKUP_CREATED) {
             currentStatus = WorkflowStatus.APPROVAL_PENDING;
-            addToHistory("Approval requested");
-            // ADD THIS ONE LINE:
-            historyService.logAction("Request Approval", "Workflow", "PENDING", "Approval requested");
-            return "✅ Approval requested. Ready for final approval.";
-        } else if (currentStatus == WorkflowStatus.APPROVAL_PENDING) {
-            currentStatus = WorkflowStatus.APPROVED;
-            addToHistory("Deployment approved");
-            // ADD THIS ONE LINE:
-            historyService.logAction("Approve Deployment", "Workflow", "APPROVED", "Deployment approved");
-            return "✅ Deployment approved. Ready to execute.";
-        } else {
-            // ADD THIS ONE LINE:
-            historyService.logAction("Approve Deployment", "Workflow", "FAILED", "Cannot approve at current stage");
-            return "⚠️ Cannot approve at current workflow stage.";
+            add("Approval requested");
+            historyService.logAction("Approve", "Workflow", "PENDING", "Approval requested");
+            return "Approval requested.";
         }
+
+        if (currentStatus == WorkflowStatus.APPROVAL_PENDING) {
+            currentStatus = WorkflowStatus.APPROVED;
+            add("Deployment approved");
+            historyService.logAction("Approve", "Workflow", "APPROVED", "Approved");
+            return "Deployment approved.";
+        }
+
+        historyService.logAction("Approve", "Workflow", "FAILED", "Invalid stage");
+        return "⚠️ You cannot approve at this stage.";
     }
 
     public String deployToDatabase() {
-        System.out.println("WorkflowService.deployToDatabase() called");
-        
         if (currentStatus != WorkflowStatus.APPROVED) {
-            // ADD THIS ONE LINE:
-            historyService.logAction("Deploy to Database", "Workflow", "FAILED", "Deployment not approved");
+            historyService.logAction("Deploy", "Workflow", "FAILED", "Not approved");
             return "⚠️ Deployment must be approved first.";
         }
-        
-        currentStatus = WorkflowStatus.COMPLETED;
-        String result = "🚀 Deployment simulation successful!";
-        addToHistory(result);
-        // ADD THIS ONE LINE:
-        historyService.logAction("Deploy to Database", "Workflow", "SUCCESS", "Deployment simulation completed");
-        return result;
+
+        try {
+            executor.executeSql(lastSQL);
+            currentStatus = WorkflowStatus.COMPLETED;
+            add("Deployment completed");
+            historyService.logAction("Deploy", "Workflow", "SUCCESS", "Deployment executed");
+            return "Deployment executed successfully.";
+        } catch (Exception ex) {
+            add("Deployment failed: " + ex.getMessage());
+            historyService.logAction("Deploy", "Workflow", "FAILED", ex.getMessage());
+            return "❌ Deployment failed: " + ex.getMessage();
+        }
     }
 
-    // KEEP ALL YOUR EXISTING METHODS EXACTLY AS THEY ARE
-    private void addToHistory(String message) {
-        String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-        workflowHistory.add(timestamp + " - " + message);
-        System.out.println("History added: " + message);
+    public void reset() {
+        currentStatus = WorkflowStatus.DRAFT;
+        workflowHistory.clear();
+        add("Workflow reset");
+        historyService.logAction("Reset", "Workflow", "DRAFT", "Workflow reset");
     }
 
-    public WorkflowStatus getCurrentStatus() {
-        return currentStatus;
+    private void add(String msg) {
+        String ts = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        workflowHistory.add(ts + " - " + msg);
     }
 
-    public List<String> getWorkflowHistory() {
-        return workflowHistory;
-    }
-
-    public String getLastSQL() {
-        return lastSQL;
-    }
+    public WorkflowStatus getCurrentStatus() { return currentStatus; }
+    public List<String> getWorkflowHistory() { return workflowHistory; }
+    public String getLastSQL() { return lastSQL; }
 }

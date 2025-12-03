@@ -180,6 +180,10 @@
                 <strong>Current Status:</strong> 
                 <span th:text="${currentStatus}" class="status-badge ms-2"></span>
             </div>
+            
+            <div th:if="${currentStatus == 'COMPLETED'}" class="alert alert-success mb-3">
+                Deployment completed successfully.
+            </div>
 
             <!-- Alert for missing SQL -->
             <div th:if="${not hasSQL}" class="alert alert-warning">
