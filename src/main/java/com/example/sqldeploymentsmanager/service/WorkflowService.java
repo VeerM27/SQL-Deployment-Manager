@@ -1,12 +1,12 @@
 package com.example.sqldeploymentsmanager.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.SessionScope;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.SessionScope;
 
 @Service
 @SessionScope
@@ -19,17 +19,21 @@ public class WorkflowService {
     private final HistoryService historyService;
     private final RowImpactService rowImpactService;
     private final SchemaImpactService schemaImpactService;
+    private final BackupService backupService;   // ✅ FIX 1: FIELD ADDED
 
     // Impact captured from last deployment
     private List<String> lastSchemaImpact;
     private String lastRowImpactSummary;
 
+    // ✅ FIX 2: CONSTRUCTOR UPDATED TO INCLUDE BackupService
     public WorkflowService(HistoryService historyService,
                            RowImpactService rowImpactService,
-                           SchemaImpactService schemaImpactService) {
+                           SchemaImpactService schemaImpactService,
+                           BackupService backupService) {
         this.historyService = historyService;
         this.rowImpactService = rowImpactService;
         this.schemaImpactService = schemaImpactService;
+        this.backupService = backupService;   // ✅ FIX 3: ASSIGNMENT ADDED
     }
 
     public enum WorkflowStatus {
@@ -59,7 +63,6 @@ public class WorkflowService {
             return "⚠️ No SQL found to validate.";
         }
 
-        // Still a logical validation step – you already have SQLAnalysis elsewhere
         currentStatus = WorkflowStatus.VALIDATED;
         String result = "✅ SQL validation passed successfully!";
         addToHistory(result);
@@ -68,6 +71,7 @@ public class WorkflowService {
         return result;
     }
 
+    // ✅ REAL FULL MYSQL BACKUP
     public String backupDatabase() {
         System.out.println("WorkflowService.backupDatabase() called");
 
@@ -78,13 +82,25 @@ public class WorkflowService {
             return "⚠️ Please validate SQL first before backup.";
         }
 
-        // Still simulated backup (you already have a separate backup strategy)
-        currentStatus = WorkflowStatus.BACKUP_CREATED;
-        String result = "✅ Backup step recorded (ensure physical backups exist for 'college' schema).";
-        addToHistory(result);
-        historyService.logAction("Backup Database", "Workflow",
-                "SUCCESS", "Backup step completed (logical)");
-        return result;
+        try {
+            String backupPath = backupService.createFullBackup();
+            currentStatus = WorkflowStatus.BACKUP_CREATED;
+
+            String result = "✅ Full database backup created at: " + backupPath;
+
+            addToHistory(result);
+            historyService.logAction("Backup Database", "Workflow",
+                    "SUCCESS", "Backup created at " + backupPath);
+
+            return result;
+
+        } catch (Exception ex) {
+            String msg = "❌ Backup failed: " + ex.getMessage();
+            addToHistory(msg);
+            historyService.logAction("Backup Database", "Workflow",
+                    "FAILED", ex.getMessage());
+            return msg;
+        }
     }
 
     public String approveDeployment() {
@@ -125,16 +141,10 @@ public class WorkflowService {
         }
 
         try {
-            // Capture schema before
             SchemaImpactService.SchemaSnapshot before = schemaImpactService.captureSnapshot();
-
-            // Execute SQL and capture row impact
             RowImpactService.RowImpactSummary rowImpact = rowImpactService.executeWithImpact(lastSQL);
-
-            // Capture schema after
             SchemaImpactService.SchemaSnapshot after = schemaImpactService.captureSnapshot();
 
-            // Compute schema diff
             this.lastSchemaImpact = schemaImpactService.diff(before, after);
             this.lastRowImpactSummary = String.format(
                     "INSERT: %d, UPDATE: %d, DELETE: %d",
@@ -190,7 +200,6 @@ public class WorkflowService {
         return lastSQL;
     }
 
-    // Impact getters for Schema Comparison page
     public List<String> getLastSchemaImpact() {
         return lastSchemaImpact;
     }

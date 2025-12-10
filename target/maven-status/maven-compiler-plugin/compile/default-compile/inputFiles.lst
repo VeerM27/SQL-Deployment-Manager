@@ -1,3 +1,5 @@
+/Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/SchemaImpactService.java
+/Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/RowImpactService.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/SQLAnalysisService.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/controller/DevelopmentController.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/controller/WorkflowController.java
@@ -7,9 +9,13 @@
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/controller/SchemaComparisonController.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/model/HistoryRecord.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/repository/SQLScriptRepository.java
+/Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/DatabaseBackupService.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/controller/HomeController.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/SchemaComparisonService.java
+/Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/DatabaseExecutorService.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/WorkflowService.java
+/Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/SelectQueryService.java
+/Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/BackupService.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/SqlDeploymentsManagerApplication.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/controller/HistoryController.java
 /Users/xeves/Documents/SQL-Deployment-Manager/src/main/java/com/example/sqldeploymentsmanager/service/SQLService.java
