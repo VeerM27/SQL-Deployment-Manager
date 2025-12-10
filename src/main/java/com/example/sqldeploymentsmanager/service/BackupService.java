@@ -1,70 +1,62 @@
 package com.example.sqldeploymentsmanager.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BackupService {
 
-    // You can also move these to application.properties if you want
-    private static final String SCHEMA_NAME = "college";
-    private static final String BACKUP_DIR =
-            System.getProperty("user.home") + "/sql-deployment-backups";
-
-    @Value("${spring.datasource.username}")
-    private String dbUser;
-
-    @Value("${spring.datasource.password}")
-    private String dbPassword;
-
-    @Value("${spring.datasource.url}")
-    private String dbUrl;
+    private final String backupDir =
+            Paths.get(System.getProperty("user.home"), "sql-deployment-backups").toString();
 
     public String createFullBackup() {
 
+        String dbUser = System.getenv("DB_USER");
+        String dbPass = System.getenv("DB_PASS");
+
+        if (dbUser == null || dbPass == null) {
+            return "Database credentials not set. Please configure DB_USER and DB_PASS environment variables.";
+        }
+
+        if (!isMysqlDumpAvailable()) {
+            return "mysqldump not detected. Backup skipped. Please install MySQL client tools.";
+        }
+
         try {
-            // Ensure backup directory exists
-            File dir = new File(BACKUP_DIR);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
+            new File(backupDir).mkdirs();
 
-            // Timestamped filename
             String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-            String backupFileName = "college_" + timestamp + ".sql";
-            String fullPath = BACKUP_DIR + "/" + backupFileName;
+            String backupFile = backupDir + "/college_" + timestamp + ".sql";
 
-            // Extract MySQL host from JDBC URL (basic safe parse)
-            // Example: jdbc:mysql://localhost:3306/college
-            String host = dbUrl.split("//")[1].split(":")[0];
-
-            String command = String.format(
-                    "mysqldump -h %s -u%s -p%s %s > %s",
-                    host,
-                    dbUser,
-                    dbPassword,
-                    SCHEMA_NAME,
-                    fullPath
+            ProcessBuilder pb = new ProcessBuilder(
+                    "mysqldump",
+                    "-u" + dbUser,
+                    "-p" + dbPass,
+                    "college"
             );
 
-            Process process = Runtime.getRuntime().exec(new String[]{
-                    "bash", "-c", command
-            });
+            pb.redirectOutput(new File(backupFile));
+            pb.start();
 
-            int exitCode = process.waitFor();
+            return "Backup created successfully: " + backupFile;
 
-            if (exitCode != 0) {
-                throw new RuntimeException("mysqldump failed with exit code " + exitCode);
-            }
+        } catch (IOException e) {
+            return "Backup failed: " + e.getMessage();
+        }
+    }
 
-            return fullPath;
-
-        } catch (Exception ex) {
-            throw new RuntimeException("Backup failed: " + ex.getMessage(), ex);
+    private boolean isMysqlDumpAvailable() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("mysqldump", "--version");
+            pb.start();
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }
