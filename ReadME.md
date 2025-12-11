@@ -19,6 +19,13 @@ tracking.
 2. Setup Instructions (macOS)
     Step 1: Install Homebrew (if not installed)
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            Then on Apple Silicon macOS Run:
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+                eval "$(/opt/homebrew/bin/brew shellenv)"
+            On Intel macOS Run:
+                echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
+                eval "$(/usr/local/bin/brew shellenv)"
+
     Step 2: Install Java, Maven, and MySQL
         brew install openjdk@17
         brew install maven
@@ -27,12 +34,16 @@ tracking.
         export PATH="/usr/local/opt/openjdk@17/bin:$PATH"
     Step 3: Start MySQL
         brew services start mysql
-    Step 4: Create the database
+    Step 4: Create the database:
+        In MySQL Shell run:
         CREATE DATABASE sqldeploymentdb;
         (Optional) Create a dedicated user:
             CREATE USER 'sqlmanager'@'localhost' IDENTIFIED BY 'password123';
             GRANT ALL PRIVILEGES ON sqldeploymentdb.* TO 'sqlmanager'@'localhost';
             FLUSH PRIVILEGES;
+
+        If you get errors in the above step, Import /database/college_schema.sql through MySQL Workbench [Server --> Data Import]
+
     Step 5: Configure the application
         Edit src/main/resources/application.properties:
             spring.datasource.url=jdbc:mysql://localhost:3306/sqldeploymentdb
