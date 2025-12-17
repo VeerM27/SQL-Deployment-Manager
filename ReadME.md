@@ -3,6 +3,8 @@ SQL Deployment Manager is a Spring Boot web application that validates, analyses
 It provides a guided workflow consisting of SQL validation, schema comparison, row-impact assessment, backup creation, approval, deployment, and full history 
 tracking.
 
+!! Encounter any errors? Check the bottom part for common errors
+
 1. System Requirements
     * Operating System
       -  macOS (Intel or Apple Silicon)
@@ -138,5 +140,28 @@ NOTE:
    - If Schema Comparison shows no output:
    - Execute at least one CREATE, INSERT, or UPDATE statement first.
    - Then recheck Schema Comparison.
+
+   - This application has been developed and tested using standard, widely adopted technologies (Java, Spring Boot, Maven, and MySQL). While minor    
+     environment-specific configuration adjustments (such as database credentials, port availability, or MySQL installation paths) may be required when running the application on a different machine, the system has been designed to provide clear error feedback and guided workflow progression.
+   - All core functionality, execution steps, and expected outputs are documented in this report and the accompanying README. A technically competent user 
+     following these instructions should be able to successfully run, evaluate, and validate the application’s behaviour, even in the presence of minor configuration differences.
+
+7. Common Setup Issues and How to Resolve Them
+   - Database Connection Errors
+        Symptom: Application fails to start or reports database access errors.
+        Cause: Incorrect MySQL username, password, or database name.
+        Resolution: Update the database configuration in application.properties to match the local MySQL setup and ensure the target database exists.
+   - MySQL or mysqldump Not Found
+        Symptom: Backup step fails during workflow execution.
+        Cause: MySQL client tools not installed or not available on the system PATH.
+        Resolution: Install MySQL client tools and verify that mysqldump can be executed from the command line before running the application.
+   - Port Already in Use
+        Symptom: Application fails to start with a “port already in use” message.
+        Cause: Another service is already running on the default Spring Boot port.
+        Resolution: Stop the conflicting service or change the server port in application.properties.
+   - SQL Script Execution Differences
+        Symptom: SQL behaves differently than shown in screenshots.
+        Cause: The local database schema or data differs from the example dataset.
+        Resolution: This is expected behaviour. The application correctly reflects the current state of the connected database and reports schema or row-level impact accordingly.
 
 End of README
