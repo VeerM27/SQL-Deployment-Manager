@@ -14,7 +14,7 @@ public class WorkflowController {
 
     private final WorkflowService workflowService;
 
-    public WorkflowController(WorkflowService workflowService, HistoryService historyService) {
+    public WorkflowController(WorkflowService workflowService) {
         this.workflowService = workflowService;
     }
 

@@ -1,8 +1,8 @@
 package com.example.sqldeploymentsmanager.service;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -183,7 +183,7 @@ public class WorkflowService {
     }
 
     private void addToHistory(String message) {
-        String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         workflowHistory.add(timestamp + " - " + message);
         System.out.println("History added: " + message);
     }
