@@ -1,14 +1,19 @@
 package com.example.sqldeploymentsmanager.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * Service for capturing and comparing database schema snapshots.
+ */
 @Service
 public class SchemaImpactService {
 
-    private static final String SCHEMA_NAME = "college";
+    @Value("${DB_NAME:sqldeploymentdb}")
+    private String schemaName;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -33,10 +38,10 @@ public class SchemaImpactService {
             c.isNullable = rs.getString("is_nullable");
             c.columnDefault = rs.getString("column_default");
             return c;
-        }, SCHEMA_NAME);
+        }, schemaName);
 
-        Map<String, ColumnInfo> byKey = new HashMap<String, ColumnInfo>();
-        Set<String> tables = new HashSet<String>();
+        Map<String, ColumnInfo> byKey = new HashMap<>();
+        Set<String> tables = new HashSet<>();
 
         for (ColumnInfo c : columns) {
             String key = c.tableName + "." + c.columnName;
@@ -49,10 +54,10 @@ public class SchemaImpactService {
 
     public List<String> diff(SchemaSnapshot before, SchemaSnapshot after) {
 
-        List<String> impact = new ArrayList<String>();
+        List<String> impact = new ArrayList<>();
 
         // New tables
-        Set<String> newTables = new HashSet<String>(after.tables);
+        Set<String> newTables = new HashSet<>(after.tables);
         newTables.removeAll(before.tables);
 
         for (String t : newTables) {
@@ -60,7 +65,7 @@ public class SchemaImpactService {
         }
 
         // Dropped tables
-        Set<String> droppedTables = new HashSet<String>(before.tables);
+        Set<String> droppedTables = new HashSet<>(before.tables);
         droppedTables.removeAll(after.tables);
 
         for (String t : droppedTables) {
@@ -68,7 +73,7 @@ public class SchemaImpactService {
         }
 
         // Column changes
-        Set<String> allKeys = new HashSet<String>();
+        Set<String> allKeys = new HashSet<>();
         allKeys.addAll(before.columns.keySet());
         allKeys.addAll(after.columns.keySet());
 
@@ -91,7 +96,7 @@ public class SchemaImpactService {
         }
 
         if (impact.isEmpty()) {
-            impact.add("No schema changes detected in schema '" + SCHEMA_NAME + "'.");
+            impact.add("No schema changes detected in schema '" + schemaName + "'.");
         }
 
         return impact;

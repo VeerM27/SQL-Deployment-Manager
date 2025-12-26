@@ -6,8 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * Service for managing SQL scripts.
+ */
 @Service
 public class SQLService {
 
@@ -17,10 +21,18 @@ public class SQLService {
         this.repo = repo;
     }
 
+    /**
+     * Saves an uploaded SQL file to the database.
+     * Uses UTF-8 encoding to prevent character corruption.
+     *
+     * @param file The uploaded SQL file
+     * @return The saved SQLScript entity
+     * @throws IOException if file reading fails
+     */
     public SQLScript saveSQLFile(MultipartFile file) throws IOException {
         SQLScript script = new SQLScript();
         script.setFilename(file.getOriginalFilename());
-        script.setContent(new String(file.getBytes()));
+        script.setContent(new String(file.getBytes(), StandardCharsets.UTF_8));
         return repo.save(script);
     }
 

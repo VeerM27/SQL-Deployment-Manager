@@ -1,15 +1,17 @@
 package com.example.sqldeploymentsmanager.model;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Table;
+import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
+import java.time.LocalDateTime;
 
+/**
+ * Entity representing an uploaded SQL script.
+ */
 @Entity
 public class SQLScript {
 
@@ -19,7 +21,8 @@ public class SQLScript {
 
     private String filename;
 
-    @Column(length = 10000)
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private LocalDateTime uploadedAt = LocalDateTime.now();

@@ -47,13 +47,15 @@ tracking.
         If you get errors in the above step, Import /database/college_schema.sql through MySQL Workbench [Server --> Data Import]
 
     Step 5: Configure the application
-        Edit src/main/resources/application.properties:
-            spring.datasource.url=jdbc:mysql://localhost:3306/sqldeploymentdb
-            spring.datasource.username=sqlmanager
-            spring.datasource.password=password123
-            spring.jpa.hibernate.ddl-auto=update
+        Set environment variables for database credentials (REQUIRED):
+            export DB_NAME=sqldeploymentdb
+            export DB_USER=sqlmanager
+            export DB_PASSWORD=password123
 
-            backup.mysqldump.path=/usr/local/mysql/bin/mysqldump   # adjust if different
+        Alternatively, create a .env file (recommended):
+            Copy .env.example to .env and fill in your credentials
+
+        Note: For security, credentials are NO LONGER stored in application.properties
     Step 6: Build and run the application
         mvn clean install
         mvn spring-boot:run
@@ -81,14 +83,14 @@ tracking.
                 GRANT ALL PRIVILEGES ON sqldeploymentdb.* TO 'sqlmanager'@'localhost';
                 FLUSH PRIVILEGES;
     Step 5: Configure the application
-        Edit src/main/resources/application.properties:
-        spring.datasource.url=jdbc:mysql://localhost:3306/sqldeploymentdb
-        spring.datasource.username=sqlmanager
-        spring.datasource.password=password123
-        spring.jpa.hibernate.ddl-auto=update
+        Set environment variables for database credentials (REQUIRED):
+            set DB_NAME=sqldeploymentdb
+            set DB_USER=sqlmanager
+            set DB_PASSWORD=password123
 
-        backup.mysqldump.path=C:/Program Files/MySQL/MySQL Server 8.0/bin/mysqldump.exe
-        Make sure the mysqldump path matches your installation.
+        Or add them to System Environment Variables for persistence.
+
+        Note: For security, credentials are NO LONGER stored in application.properties
     Step 6: Build and run the application
             mvn clean install
             mvn spring-boot:run
